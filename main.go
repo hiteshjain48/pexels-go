@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 )
 
 const (
@@ -62,6 +61,49 @@ type CuratedPhotos struct {
 	PerPage 	int 	`json:"per_page"`
 	NextPage 	string 	`json:"next_page"`
 	Photos 		[]Photo `json:"photos"`
+}
+
+type VideoSearchResult struct {
+	Page 			int 	`json:"page"`
+	PerPage 		int 	`json:"per_page"`
+	TotalResults 	int 	`json:"total_results"`
+	NextPage 		int 	`json:"next_page"`
+	Videos 			[]Video `json:"videos"`
+}
+
+type Video struct {
+	Id 				int 			`json:"id"`
+	Width 			int 			`json:"width"`
+	Height 			int 			`json:"Height"`
+	Url 			string 			`json:"url"`
+	Image  			string 			`json:"image"`
+	FullRes 		interface{}		`json:"full_res"`
+	Duration 		float64 		`json:"duration"`
+	VideoFiles 		[]VideoFiles 	`json:"video_files"`
+	VideoPictures 	[]VideoPictures `json:"video_pictures"`
+}
+
+type PopularVideos struct {
+	Page 			int 	`json:"page"`
+	PerPage 		int 	`json:"per_page"`
+	TotalResults 	int 	`json:"total_results"`
+	Url 			string 	`json:"url"`
+	Videos 			[]Video `json:"videos"`
+}
+
+type VideoFiles struct {
+	Id 			int 	`json:"id"`
+	Quality 	string 	`json:"quality"`
+	FileType 	string 	`json:"file_type"`
+	Width 		int 	`json:"width"`
+	Height 		int 	`json:"height"`
+	Link 		string 	`json:"link:"`
+}
+
+type VideoPictures struct {
+	Id 		int 	`json:"id"`
+	Picture string 	`json:"picture"`
+	Nr 		int 	`json:"nr"`
 }
 
 func (client *Client) SearchPhotos(search string, perPage, page int) (*SearchResult, error) {
@@ -121,6 +163,18 @@ func (client *Client) GetRandomPhoto()(*Photo, error) {
 		return &result.Photos[0], nil
 	}
 	return nil , err
+}
+
+func (client *Client) SearchVideo(search string, perPage, page int) (*VideoSearchResult, error) {
+
+}
+
+func (client *Client) PopularVideo(perPage, page int) (*PopularVideos, error) {
+
+}
+
+func (client *Client) GetRandomVideo()(*Video, error) {
+
 }
 
 func (client *Client) requestDoWithAuth(method, url string) (*http.Response, error) {

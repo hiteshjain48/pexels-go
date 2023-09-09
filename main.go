@@ -1,14 +1,14 @@
 package main
 
 import (
+	"math/rand"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
-
-	"golang.org/x/tools/go/analysis/passes/defers"
+	"time"
 )
 
 const (
@@ -57,6 +57,13 @@ type PhotoSource struct {
 	Tiny 		string	`json:"tiny"`
 }
 
+type CuratedPhotos struct {
+	Page 		int 	`json:"page"`
+	PerPage 	int 	`json:"per_page"`
+	NextPage 	string 	`json:"next_page"`
+	Photos 		[]Photo `json:"photos"`
+}
+
 func (client *Client) SearchPhotos(search string, perPage, page int) (*SearchResult, error) {
 	url := fmt.Sprintf(PhotoApi+"/search?query=%s&per_page=%d&page=%d",search,perPage,page)
 	res, err := client.requestDoWithAuth("GET", url)
@@ -72,6 +79,48 @@ func (client *Client) SearchPhotos(search string, perPage, page int) (*SearchRes
 
 	err = json.Unmarshal(data, &result)
 	return &result, err
+}
+
+func (client *Client) CuratedPhotos(perPage, page int) (*CuratedPhotos, error) {
+	url := fmt.Sprintf(PhotoApi+"/curated?per_page=%d&page=%d",perPage, page)
+	res, err := client.requestDoWithAuth("GET",url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result CuratedPhotos
+	err = json.Unmarshal(data, &result)
+	return &result, err
+}
+
+func (client *Client) GetPhoto(id int) (*Photo, error) {
+	url := fmt.Sprintf(PhotoApi+"/photos/%d",id)
+	res, err := client.requestDoWithAuth("GET", url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	var result Photo
+	err = json.Unmarshal(data, &result)
+	return &result, err
+}
+
+func (client *Client) GetRandomPhoto()(*Photo, error) {
+	randNum := rand.Intn(1001)
+	result, err := client.CuratedPhotos(1,randNum)
+	if err == nil && len(result.Photos)==1 {
+		return &result.Photos[0], nil
+	}
+	return nil , err
 }
 
 func (client *Client) requestDoWithAuth(method, url string) (*http.Response, error) {

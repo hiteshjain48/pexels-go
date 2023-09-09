@@ -166,15 +166,48 @@ func (client *Client) GetRandomPhoto()(*Photo, error) {
 }
 
 func (client *Client) SearchVideo(search string, perPage, page int) (*VideoSearchResult, error) {
+	url := fmt.Sprintf(VideoApi+"/query?=%sper_page=%d&page=%d",search, perPage, page)
+	res, err := client.requestDoWithAuth("GET", url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
 
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result VideoSearchResult
+	err = json.Unmarshal(data, &result)
+	return &result, err
 }
 
 func (client *Client) PopularVideo(perPage, page int) (*PopularVideos, error) {
+	url := fmt.Sprintf(VideoApi+"/popular?per_page=%d&page=%d",perPage, page)
+	res, err := client.requestDoWithAuth("GET", url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
 
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result PopularVideos
+	err = json.Unmarshal(data, &result)
+	return &result, err
 }
 
 func (client *Client) GetRandomVideo()(*Video, error) {
-
+	randNum := rand.Intn(1001)
+	result, err := client.PopularVideo(1,randNum)
+	if err == nil && len(result.Videos) == 1 {
+		return &result.Videos[0], nil
+	}
+	return nil, err
 }
 
 func (client *Client) requestDoWithAuth(method, url string) (*http.Response, error) {
@@ -198,19 +231,23 @@ func (client *Client) requestDoWithAuth(method, url string) (*http.Response, err
 	return res, nil
 }
 
+func (client *Client) GetRemainingRequestsThisMonth() int {
+	return client.RemainingTimes
+}
+
 func main() {
 	os.Setenv("PexelsToken", "pUK6JmqnsLWLulPDdjOOwU8nrz0efX1qV9twL5JQIEaFZJCB09Kcwu3y")
 	Token := os.Getenv("PexelsToken")
 	
 	client := NewClient(Token)
 
-	result, err := client.SearchPhotos("waves",15,1)
+	result, err := client.SearchPhotos("planet",15,1)
 	if err != nil {
-		fmt.Errorf("search error: %v", err)
+		fmt.Printf("search error: %v", err)
 	}
 
 	if result.Page == 0 {
-		fmt.Errorf("search result wrong")
+		fmt.Printf("search result wrong")
 	}
 
 	fmt.Println(result)
